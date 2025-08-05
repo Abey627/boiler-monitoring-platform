@@ -1,0 +1,167 @@
+﻿version: '3.8'
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: boiler_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend_web
+      - frontend_api
+      - iot_ingestion
+      - ai_processor
+      - alert_service
+    networks:
+      - boiler_network
+    restart: no
+
+  # Frontend Web Service (Dashboard UI)
+  frontend_web:
+    build:
+      context: ./frontend_web
+      dockerfile: Dockerfile
+    container_name: boiler_frontend_web
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=frontend_web.settings
+    volumes:
+      - ./frontend_web:/app
+      - /app/__pycache__
+    ports:
+      - "8000:8000"
+    networks:
+      - boiler_network
+    restart: no
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend_web
+          target: /app
+
+  # Frontend API Service
+  frontend_api:
+    build:
+      context: ./services/frontend_api
+      dockerfile: Dockerfile
+    container_name: boiler_frontend_api
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=frontend_api.settings
+    volumes:
+      - ./services/frontend_api:/app
+      - /app/__pycache__
+    ports:
+      - "8001:8001"
+    networks:
+      - boiler_network
+    restart: no
+    develop:
+      watch:
+        - action: sync
+          path: ./services/frontend_api
+          target: /app
+
+  # IoT Ingestion Service
+  iot_ingestion:
+    build:
+      context: ./services/iot_ingestion
+      dockerfile: Dockerfile
+    container_name: boiler_iot_ingestion
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=iot_ingestion.settings
+    volumes:
+      - ./services/iot_ingestion:/app
+      - /app/__pycache__
+    ports:
+      - "8002:8002"
+    networks:
+      - boiler_network
+    restart: no
+    develop:
+      watch:
+        - action: sync
+          path: ./services/iot_ingestion
+          target: /app
+
+  # AI Processor Service
+  ai_processor:
+    build:
+      context: ./services/ai_processor
+      dockerfile: Dockerfile
+    container_name: boiler_ai_processor
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=ai_processor.settings
+    volumes:
+      - ./services/ai_processor:/app
+      - /app/__pycache__
+    ports:
+      - "8003:8003"
+    networks:
+      - boiler_network
+    restart: no
+    develop:
+      watch:
+        - action: sync
+          path: ./services/ai_processor
+          target: /app
+
+  # Alert Service
+  alert_service:
+    build:
+      context: ./services/alert_service
+      dockerfile: Dockerfile
+    container_name: boiler_alert_service
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=alert_service.settings
+    volumes:
+      - ./services/alert_service:/app
+      - /app/__pycache__
+    ports:
+      - "8004:8004"
+    networks:
+      - boiler_network
+    restart: no
+    develop:
+      watch:
+        - action: sync
+          path: ./services/alert_service
+          target: /app
+
+  # Redis Cache Service (for development)
+  redis:
+    image: redis:7-alpine
+    container_name: boiler_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - boiler_network
+    restart: no
+
+# Networks
+networks:
+  boiler_network:
+    driver: bridge
+
+# Volumes
+volumes:
+  redis_data:
+    driver: local
