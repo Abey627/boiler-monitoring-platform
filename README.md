@@ -21,6 +21,51 @@ Client Browser → Nginx (Reverse Proxy) → Frontend Web (Dashboard) → Fronte
                                                                                   ├── IoT Ingestion
                                                                                   ├── AI Processor  
                                                                                   └── Alert Service
+                                                                                  
+Database Layer:
+PostgreSQL (Business Logic) ← → InfluxDB (Time-Series Data) ← → Redis (Cache/Sessions)
+```
+
+### Database Architecture
+- **PostgreSQL**: Stores business logic, user accounts, site configurations, alert rules, and audit logs
+- **InfluxDB**: Optimized for high-frequency IoT sensor data with automatic retention policies
+- **Redis**: Provides real-time caching, session management, and message queuing for alerts
+
+### Real-Time Performance Strategy
+
+**Redis doesn't store all IoT data** - that would be inefficient. Instead, it uses a smart caching strategy:
+
+#### **Data Storage Distribution:**
+```
+┌─────────────────────┬──────────────────┬────────────────────┐
+│ Database            │ Data Type        │ Purpose            │
+├─────────────────────┼──────────────────┼────────────────────┤
+│ InfluxDB            │ ALL sensor data  │ Historical analysis│
+│                     │ (months/years)   │ Trend analysis     │
+├─────────────────────┼──────────────────┼────────────────────┤
+│ Redis               │ Latest values    │ Real-time dashboard│
+│                     │ (5-10 minutes)   │ <100ms response    │
+├─────────────────────┼──────────────────┼────────────────────┤
+│ PostgreSQL          │ Business logic   │ User management    │
+│                     │ Configurations   │ Alert rules        │
+└─────────────────────┴──────────────────┴────────────────────┘
+```
+
+#### **Why This Provides Real-Time Performance:**
+- **Dashboard queries**: Redis cache responds in <1ms vs InfluxDB queries taking 100-500ms
+- **Latest sensor values**: Instantly available without complex time-series queries
+- **Alert processing**: Real-time queuing and processing of notifications
+- **Session management**: User preferences and dashboard configs cached for instant loading
+
+### Data Flow
+```
+IoT Sensors → IoT Ingestion Service → InfluxDB (Raw Data)
+                                   ↓
+AI Processor ← InfluxDB (Analysis) → PostgreSQL (Results)
+     ↓                                       ↓
+Alert Service ← PostgreSQL (Rules) → Redis (Queue) → Notifications
+     ↓
+Frontend API ← PostgreSQL + Redis (Cache) → Dashboard
 ```
 
 ### Nginx Role
@@ -34,15 +79,17 @@ Nginx serves as a **reverse proxy** and **load balancer** that:
 
 ## 🧩 Services
 
-| Service | Description | Port |
-|---------|-------------|------|
-| `nginx` | Reverse proxy and API gateway | 80 |
-| `frontend_web` | Dashboard UI with Chart.js & Tailwind CSS | 8000 |
-| `frontend_api` | REST API serving dashboard data | 8001 |
-| `iot_ingestion` | Receives mock IoT data | 8002 |
-| `ai_processor` | Data processing and analytics | 8003 |
-| `alert_service` | Notification system | 8004 |
-| `redis` | Cache and session storage | 6379 |
+| Service | Description | Port | Database |
+|---------|-------------|------|----------|
+| `nginx` | Reverse proxy and API gateway | 80 | - |
+| `frontend_web` | Dashboard UI with Chart.js & Tailwind CSS | 8000 | PostgreSQL |
+| `frontend_api` | REST API serving dashboard data | 8001 | PostgreSQL + Redis |
+| `iot_ingestion` | Receives mock IoT data | 8002 | InfluxDB + PostgreSQL |
+| `ai_processor` | Data processing and analytics | 8003 | InfluxDB + PostgreSQL |
+| `alert_service` | Notification system | 8004 | PostgreSQL + Redis |
+| `postgres` | Primary database | 5432 | - |
+| `influxdb` | Time-series database for sensor data | 8086 | - |
+| `redis` | Cache and session storage | 6379 | - |
 
 ---
 
@@ -51,10 +98,13 @@ Nginx serves as a **reverse proxy** and **load balancer** that:
 - **Language:** Python 3.11
 - **Backend:** Django, Django REST Framework
 - **Frontend:** Django Templates, Tailwind CSS, Chart.js
-- **Database:** SQLite (dev), Microsoft SQL Server (prod)
-- **Cache:** Redis
+- **Databases:** 
+  - **PostgreSQL** - Primary database for business logic, users, configurations
+  - **InfluxDB** - Time-series database for high-frequency IoT sensor data
+  - **Redis** - Cache and session storage for real-time performance
 - **Containerization:** Docker, Docker Compose
 - **Proxy:** Nginx
+- **Analytics:** NumPy, Pandas for data processing
 
 ---
 
@@ -68,8 +118,31 @@ cd boiler-monitoring-platform
 docker compose up --build
 ```
 
+### Database Setup
+
+After the containers are running, set up the databases:
+
+```bash
+# Run PostgreSQL migrations for all services
+docker compose exec frontend_api python manage.py migrate
+docker compose exec iot_ingestion python manage.py migrate  
+docker compose exec ai_processor python manage.py migrate
+docker compose exec alert_service python manage.py migrate
+
+# Create sample data (optional)
+docker compose exec frontend_api python manage.py shell -c "
+from dashboard_api.models import Organization
+org = Organization.objects.create(name='Demo Industries', code='DEMO', contact_email='demo@steambytes.com')
+print(f'Created organization: {org.name}')
+"
+
+# Generate sample IoT data
+python scripts/generate_sample_data.py
+```
+
 **Access Points:**
 - Dashboard: http://localhost/ (via nginx proxy)
+- InfluxDB UI: http://localhost:8086 (admin/steambytes_influx_password)
 - Direct Service Access: http://localhost:8000-8004
 - API Endpoints:
   - Frontend API: http://localhost/api/frontend/
@@ -86,10 +159,36 @@ boiler-monitoring-platform/
 │   ├── frontend_api/      # API service
 │   ├── iot_ingestion/     # IoT data ingestion
 │   ├── ai_processor/      # Analytics
-│   └── alert_service/     # Notifications
+│   ├── alert_service/     # Notifications
+│   └── shared/           # Shared database utilities
 ├── nginx/                 # Reverse proxy
 └── docker-compose.yml     # Container orchestration
 ```
+
+## 📊 Data Models
+
+### IoT Ingestion Service
+- **BoilerSite**: Physical boiler installations
+- **Sensor**: Individual sensors (temperature, pressure, fuel level, etc.)
+- **DataIngestionLog**: Tracks data ingestion events
+
+### Alert Service  
+- **AlertRule**: Configurable alert thresholds and conditions
+- **Alert**: Triggered alerts with status tracking
+- **NotificationChannel**: Email, SMS, webhook configurations
+- **NotificationLog**: Delivery tracking
+
+### Frontend API Service
+- **Organization**: Client organizations
+- **User**: Extended user model with roles
+- **DashboardConfig**: Customizable dashboard layouts
+- **AuditLog**: Compliance and security tracking
+
+### AI Processor Service
+- **AnalyticsJob**: Background processing jobs
+- **PredictiveModel**: Trained ML models for forecasting
+- **AnalyticsResult**: Efficiency scores, predictions
+- **PerformanceMetric**: Calculated KPIs and trends
 
 ---
 

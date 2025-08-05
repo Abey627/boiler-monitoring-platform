@@ -75,12 +75,29 @@ WSGI_APPLICATION = 'iot_ingestion.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Use PostgreSQL for production-like setup
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'steambytes_core'),
+        'USER': os.environ.get('POSTGRES_USER', 'steambytes'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'steambytes_dev_password'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 20,
+        }
     }
 }
+
+# Fallback to SQLite for local development without Docker
+if os.environ.get('USE_SQLITE', '').lower() == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

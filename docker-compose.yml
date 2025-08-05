@@ -117,10 +117,46 @@
       - boiler_network
     restart: no
 
-  # Redis Cache Service (for development)
+  # Primary Database (PostgreSQL)
+  postgres:
+    image: postgres:15
+    container_name: boiler_postgres
+    environment:
+      POSTGRES_DB: steambytes_core
+      POSTGRES_USER: steambytes
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-steambytes_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - boiler_network
+    restart: no
+
+  # Time-Series Database (InfluxDB)
+  influxdb:
+    image: influxdb:2.7
+    container_name: boiler_influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: steambytes
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:-steambytes_influx_password}
+      DOCKER_INFLUXDB_INIT_ORG: steambytes
+      DOCKER_INFLUXDB_INIT_BUCKET: sensor_data
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-steambytes_admin_token}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    ports:
+      - "8086:8086"
+    networks:
+      - boiler_network
+    restart: no
+
+  # Redis Cache & Session Store
   redis:
     image: redis:7-alpine
     container_name: boiler_redis
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
@@ -136,5 +172,9 @@ networks:
 
 # Volumes
 volumes:
+  postgres_data:
+    driver: local
+  influxdb_data:
+    driver: local
   redis_data:
     driver: local
