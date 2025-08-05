@@ -1,202 +1,265 @@
-# Boiler Monitoring Platform
+# 🔥 Industrial Boiler Monitoring Platform
 
-A mock industrial boiler monitoring platform built with Django microservices architecture.
+**A modern industrial boiler monitoring system built for real-time operations and predictive maintenance.**
 
-## 🎯 Purpose
+> **🎭 MOCK PROJECT**: This is a demonstration project with simulated data for portfolio purposes.
 
-This project demonstrates:
-- Microservices architecture using Django
-- Real-time data ingestion and monitoring
-- Containerized deployment using Docker Compose
-- Nginx-based service orchestration
-
-> **Note:** This is a demonstration project with simulated data.
+> **Live Demo**: Login at http://localhost:8000 with `admin` / `steambytes123`
 
 ---
 
-## ⚙️ Architecture
+## 🎯 What This System Does
 
-```
-Client Browser → Nginx (Reverse Proxy) → Frontend Web (Dashboard) → Frontend API → Microservices
-                                                                                  ├── IoT Ingestion
-                                                                                  ├── AI Processor  
-                                                                                  └── Alert Service
-                                                                                  
-Database Layer:
-PostgreSQL (Business Logic) ← → InfluxDB (Time-Series Data) ← → Redis (Cache/Sessions)
-```
-
-### Database Architecture
-- **PostgreSQL**: Stores business logic, user accounts, site configurations, alert rules, and audit logs
-- **InfluxDB**: Optimized for high-frequency IoT sensor data with automatic retention policies
-- **Redis**: Provides real-time caching, session management, and message queuing for alerts
-
-### Real-Time Performance Strategy
-
-**Redis doesn't store all IoT data** - that would be inefficient. Instead, it uses a smart caching strategy:
-
-#### **Data Storage Distribution:**
-```
-┌─────────────────────┬──────────────────┬────────────────────┐
-│ Database            │ Data Type        │ Purpose            │
-├─────────────────────┼──────────────────┼────────────────────┤
-│ InfluxDB            │ ALL sensor data  │ Historical analysis│
-│                     │ (months/years)   │ Trend analysis     │
-├─────────────────────┼──────────────────┼────────────────────┤
-│ Redis               │ Latest values    │ Real-time dashboard│
-│                     │ (5-10 minutes)   │ <100ms response    │
-├─────────────────────┼──────────────────┼────────────────────┤
-│ PostgreSQL          │ Business logic   │ User management    │
-│                     │ Configurations   │ Alert rules        │
-└─────────────────────┴──────────────────┴────────────────────┘
-```
-
-#### **Why This Provides Real-Time Performance:**
-- **Dashboard queries**: Redis cache responds in <1ms vs InfluxDB queries taking 100-500ms
-- **Latest sensor values**: Instantly available without complex time-series queries
-- **Alert processing**: Real-time queuing and processing of notifications
-- **Session management**: User preferences and dashboard configs cached for instant loading
-
-### Data Flow
-```
-IoT Sensors → IoT Ingestion Service → InfluxDB (Raw Data)
-                                   ↓
-AI Processor ← InfluxDB (Analysis) → PostgreSQL (Results)
-     ↓                                       ↓
-Alert Service ← PostgreSQL (Rules) → Redis (Queue) → Notifications
-     ↓
-Frontend API ← PostgreSQL + Redis (Cache) → Dashboard
-```
-
-### Nginx Role
-Nginx serves as a **reverse proxy** and **load balancer** that:
-- Routes incoming requests to appropriate microservices based on URL paths
-- Provides a single entry point (port 80) for all services
-- Handles SSL termination and static file serving
-- Implements API gateway patterns for microservice communication
+- **Real-time monitoring** of all boiler units from a single dashboard
+- **Predictive alerts** to prevent costly equipment failures  
+- **Performance analytics** to optimize efficiency and reduce energy costs
+- **Compliance reporting** for safety and regulatory requirements
+- **Mobile-friendly** interface that works on phones, tablets, and computers
+- **Live temperature, pressure, and flow monitoring** with 30-second updates
+- **Smart alerting system** for maintenance scheduling and emergency response
+- **Historical data analysis** to identify trends and optimization opportunities
 
 ---
 
-## 🧩 Services
-
-| Service | Description | Port | Database |
-|---------|-------------|------|----------|
-| `nginx` | Reverse proxy and API gateway | 80 | - |
-| `frontend_web` | Dashboard UI with Chart.js & Tailwind CSS | 8000 | PostgreSQL |
-| `frontend_api` | REST API serving dashboard data | 8001 | PostgreSQL + Redis |
-| `iot_ingestion` | Receives mock IoT data | 8002 | InfluxDB + PostgreSQL |
-| `ai_processor` | Data processing and analytics | 8003 | InfluxDB + PostgreSQL |
-| `alert_service` | Notification system | 8004 | PostgreSQL + Redis |
-| `postgres` | Primary database | 5432 | - |
-| `influxdb` | Time-series database for sensor data | 8086 | - |
-| `redis` | Cache and session storage | 6379 | - |
-
----
-
-## 🔧 Tech Stack
-
-- **Language:** Python 3.11
-- **Backend:** Django, Django REST Framework
-- **Frontend:** Django Templates, Tailwind CSS, Chart.js
-- **Databases:** 
-  - **PostgreSQL** - Primary database for business logic, users, configurations
-  - **InfluxDB** - Time-series database for high-frequency IoT sensor data
-  - **Redis** - Cache and session storage for real-time performance
-- **Containerization:** Docker, Docker Compose
-- **Proxy:** Nginx
-- **Analytics:** NumPy, Pandas for data processing
-
----
-
-## 🚀 Quick Start
+## 🚀 Quick Demo Setup
 
 ```bash
+# 1. Download the project
 git clone https://github.com/Abey627/boiler-monitoring-platform.git
 cd boiler-monitoring-platform
 
-# Build and run all services
+# 2. Start the system (takes 2-3 minutes first time)
 docker compose up --build
+
+# 3. Open your browser to: http://localhost:8000
+# Login: admin / steambytes123
 ```
 
-### Database Setup
+**That's it!** The system starts with sample data ready for demonstration.
 
-After the containers are running, set up the databases:
+---
 
+## 📊 Dashboard Features
+
+| Feature | Business Value |
+|---------|----------------|
+| **Live Monitoring** | See all boiler status at a glance |
+| **Alert Management** | Prevent equipment failures before they happen |
+| **Performance Metrics** | Track efficiency and optimize energy usage |
+| **Historical Charts** | Identify trends and plan maintenance schedules |
+| **Mobile Access** | Monitor operations from anywhere |
+| **User Management** | Control access and maintain security |
+
+---
+
+## 🏗️ System Architecture (Technical Overview)
+
+### Simple View
+```
+📱 User Dashboard → 🌐 Web Server → 🔧 Monitoring Services → 📊 Databases
+```
+
+### Detailed Architecture
+```
+Industrial Sensors → Data Collection → Real-time Processing → User Dashboard
+                                    ↓
+                            Alert System → Notifications
+                                    ↓
+                              Data Storage → Analytics & Reporting
+```
+
+### Technology Stack
+- **Frontend**: Modern web dashboard with real-time charts
+- **Backend**: Python/Django microservices architecture  
+- **Databases**: PostgreSQL (business data) + InfluxDB (sensor data) + Redis (real-time cache)
+- **Deployment**: Docker containers for easy installation and scaling
+
+---
+
+## 🔧 System Components
+
+| Component | Purpose | Access |
+|-----------|---------|--------|
+| **Dashboard** | Main monitoring interface | http://localhost:8000 |
+| **API Services** | Data processing and business logic | Background services |
+| **Database** | Data storage and analytics | Background services |
+| **Alert System** | Notifications and warnings | Integrated in dashboard |
+
+---
+
+## 📈 Key Benefits
+
+- ✅ **Centralized monitoring** - All boiler data in one place
+- ✅ **Reduced downtime** - Early warning system prevents failures
+- ✅ **Mobile access** - Monitor from anywhere, anytime
+- ✅ **Easy deployment** - Set up in minutes, not days
+- 📊 **Cost savings** through predictive maintenance
+- ⚡ **Energy optimization** with performance analytics
+- 📱 **Improved safety** with real-time alerts
+- 📋 **Compliance** with automated reporting
+
+---
+
+## 🎥 Demo Scenarios
+
+### Scenario 1: Daily Operations
+1. Login to dashboard
+2. Check system overview (3 boilers operational)
+3. Review temperature trends chart
+4. Check active alerts and maintenance schedule
+
+### Scenario 2: Mobile Monitoring
+1. Open dashboard on mobile device
+2. View condensed metrics optimized for small screens
+3. Receive push notifications for critical alerts
+4. Quick status check while on-site
+
+### Scenario 3: Maintenance Planning
+1. Review historical performance data
+2. Identify efficiency trends and patterns
+3. Schedule preventive maintenance based on analytics
+4. Track maintenance history and compliance
+
+---
+
+## 📞 Support & Contact
+
+**Contact**: Muhammad Syafiq bin Ahmad Nadzri  
+**LinkedIn**: [linkedin.com/in/msyafiq-anadzri](https://www.linkedin.com/in/msyafiq-anadzri)
+
+**Project Features:**
+- APIs available for connecting existing systems
+- Dashboard and alerts can be tailored to specific needs
+- Architecture supports multiple facilities and thousands of sensors
+- Complete containerized deployment for easy setup
+
+---
+
+<details>
+<summary>🔧 Technical Details (Click to expand)</summary>
+
+## Detailed Technical Architecture
+
+### Microservices Design
+- **Frontend Web**: Dashboard UI with responsive design
+- **Frontend API**: REST API for dashboard data
+- **IoT Ingestion**: Real-time sensor data collection
+- **AI Processor**: Analytics and predictive algorithms
+- **Alert Service**: Notification management
+
+### Database Strategy
+- **PostgreSQL**: Business logic, users, configurations
+- **InfluxDB**: Time-series sensor data (optimized for IoT)
+- **Redis**: Real-time caching for <100ms dashboard response
+
+### Performance Features
+- **Real-time updates**: 30-second refresh cycles
+- **Responsive design**: Works on all device sizes
+- **Scalable architecture**: Supports multiple facilities
+- **High availability**: Containerized deployment
+
+### Development Commands
 ```bash
-# Run PostgreSQL migrations for all services
-docker compose exec frontend_api python manage.py migrate
-docker compose exec iot_ingestion python manage.py migrate  
-docker compose exec ai_processor python manage.py migrate
-docker compose exec alert_service python manage.py migrate
+# Setup development environment
+docker compose up --build
 
-# Create sample data (optional)
-docker compose exec frontend_api python manage.py shell -c "
-from dashboard_api.models import Organization
-org = Organization.objects.create(name='Demo Industries', code='DEMO', contact_email='demo@steambytes.com')
-print(f'Created organization: {org.name}')
-"
+# Run database migrations
+docker compose exec frontend_web python manage.py migrate
 
-# Generate sample IoT data
-python scripts/generate_sample_data.py
+# Create admin user
+docker compose exec frontend_web python manage.py createsuperuser
+
+# View logs
+docker compose logs -f frontend_web
 ```
 
-**Access Points:**
-- Dashboard: http://localhost/ (via nginx proxy)
-- InfluxDB UI: http://localhost:8086 (admin/steambytes_influx_password)
-- Direct Service Access: http://localhost:8000-8004
-- API Endpoints:
-  - Frontend API: http://localhost/api/frontend/
-  - IoT Ingestion: http://localhost/api/iot/
-  - AI Processor: http://localhost/api/ai/
-  - Alert Service: http://localhost/api/alert/
+### API Endpoints
+- **Dashboard API**: `/api/frontend/`
+- **Sensor Data**: `/api/iot/`
+- **Analytics**: `/api/ai/`
+- **Alerts**: `/api/alert/`
 
-## 📂 Project Structure
-
-```
-boiler-monitoring-platform/
-├── frontend_web/          # Dashboard UI
-├── services/              # Microservices
-│   ├── frontend_api/      # API service
-│   ├── iot_ingestion/     # IoT data ingestion
-│   ├── ai_processor/      # Analytics
-│   ├── alert_service/     # Notifications
-│   └── shared/           # Shared database utilities
-├── nginx/                 # Reverse proxy
-└── docker-compose.yml     # Container orchestration
-```
-
-## 📊 Data Models
-
-### IoT Ingestion Service
-- **BoilerSite**: Physical boiler installations
-- **Sensor**: Individual sensors (temperature, pressure, fuel level, etc.)
-- **DataIngestionLog**: Tracks data ingestion events
-
-### Alert Service  
-- **AlertRule**: Configurable alert thresholds and conditions
-- **Alert**: Triggered alerts with status tracking
-- **NotificationChannel**: Email, SMS, webhook configurations
-- **NotificationLog**: Delivery tracking
-
-### Frontend API Service
-- **Organization**: Client organizations
-- **User**: Extended user model with roles
-- **DashboardConfig**: Customizable dashboard layouts
-- **AuditLog**: Compliance and security tracking
-
-### AI Processor Service
-- **AnalyticsJob**: Background processing jobs
-- **PredictiveModel**: Trained ML models for forecasting
-- **AnalyticsResult**: Efficiency scores, predictions
-- **PerformanceMetric**: Calculated KPIs and trends
+</details>
 
 ---
 
-## 👨‍💻 Author
+> **📝 Note**: This is a demonstration project created for portfolio purposes. All data shown is simulated and not connected to real industrial equipment.
+```
+Industrial Sensors → Data Collection → Real-time Processing → User Dashboard
+                                    ↓
+                            Alert System → Notifications
+                                    ↓
+                              Data Storage → Analytics & Reporting
+```
 
-**Muhammad Syafiq bin Ahmad Nadzri**  
-[LinkedIn](https://www.linkedin.com/in/msyafiq-anadzri)
+### Technology Stack
+- **Frontend**: Modern web dashboard with real-time charts
+- **Backend**: Python/Django microservices architecture  
+- **Databases**: PostgreSQL (business data) + InfluxDB (sensor data) + Redis (real-time cache)
+- **Deployment**: Docker containers for easy installation and scaling
 
 ---
 
-*This is a demonstration project with simulated data.*
+## 🔧 System Components
+
+| Component | Purpose | Access |
+|-----------|---------|--------|
+| **Dashboard** | Main monitoring interface | http://localhost:8000 |
+| **API Services** | Data processing and business logic | Background services |
+| **Database** | Data storage and analytics | Background services |
+| **Alert System** | Notifications and warnings | Integrated in dashboard |
+
+---
+
+## � Business Benefits
+
+### Immediate Benefits
+- ✅ **Centralized monitoring** - All boiler data in one place
+- ✅ **Reduced downtime** - Early warning system prevents failures
+- ✅ **Mobile access** - Monitor from anywhere, anytime
+- ✅ **Easy deployment** - Set up in minutes, not days
+
+### Long-term Benefits  
+- 📊 **Cost savings** through predictive maintenance
+- ⚡ **Energy optimization** with performance analytics
+- 📱 **Improved safety** with real-time alerts
+- 📋 **Compliance** with automated reporting
+
+---
+
+## 🎥 Demo Scenarios
+
+### Scenario 1: Daily Operations
+1. Login to dashboard
+2. Check system overview (3 boilers operational)
+3. Review temperature trends chart
+4. Check active alerts and maintenance schedule
+
+### Scenario 2: Mobile Monitoring
+1. Open dashboard on mobile device
+2. View condensed metrics optimized for small screens
+3. Receive push notifications for critical alerts
+4. Quick status check while on-site
+
+### Scenario 3: Maintenance Planning
+1. Review historical performance data
+2. Identify efficiency trends and patterns
+3. Schedule preventive maintenance based on analytics
+4. Track maintenance history and compliance
+
+---
+
+## 📞 Support & Contact
+
+**Contact**: Muhammad Syafiq bin Ahmad Nadzri  
+**LinkedIn**: [linkedin.com/in/msyafiq-anadzri](https://www.linkedin.com/in/msyafiq-anadzri)
+
+**Project Features:**
+- APIs available for connecting existing systems
+- Dashboard and alerts can be tailored to specific needs
+- Architecture supports multiple facilities and thousands of sensors
+- Complete containerized deployment for easy setup
+
+---
+
+> **📝 Note**: This is a demonstration project created for portfolio purposes. All data shown is simulated and not connected to real industrial equipment.
