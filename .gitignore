@@ -91,6 +91,12 @@ logs/
 .pytest_cache/
 cover/
 
+# Backup files
+*_backup.*
+*_new.*
+*.bak
+*.orig
+
 # Translations
 *.mo
 *.pot
