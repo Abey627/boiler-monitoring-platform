@@ -23,9 +23,13 @@ migrations/*.py
 !migrations/__init__.py
 
 # Environment variables
-.env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+
+# Keep .env for demo purposes (contains safe development settings)
+# .env
 
 # IDEs
 .vscode/
@@ -34,9 +38,6 @@ migrations/*.py
 *.swo
 .DS_Store
 Thumbs.db
-
-# Docker
-.dockerignore
 
 # Testing
 htmlcov/
@@ -174,7 +175,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .envrc
 .venv
 env/

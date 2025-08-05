@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -38,11 +36,6 @@ services:
     networks:
       - boiler_network
     restart: no
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend_web
-          target: /app
 
   # Frontend API Service
   frontend_api:
@@ -63,11 +56,6 @@ services:
     networks:
       - boiler_network
     restart: no
-    develop:
-      watch:
-        - action: sync
-          path: ./services/frontend_api
-          target: /app
 
   # IoT Ingestion Service
   iot_ingestion:
@@ -88,11 +76,6 @@ services:
     networks:
       - boiler_network
     restart: no
-    develop:
-      watch:
-        - action: sync
-          path: ./services/iot_ingestion
-          target: /app
 
   # AI Processor Service
   ai_processor:
@@ -113,11 +96,6 @@ services:
     networks:
       - boiler_network
     restart: no
-    develop:
-      watch:
-        - action: sync
-          path: ./services/ai_processor
-          target: /app
 
   # Alert Service
   alert_service:
@@ -138,11 +116,6 @@ services:
     networks:
       - boiler_network
     restart: no
-    develop:
-      watch:
-        - action: sync
-          path: ./services/alert_service
-          target: /app
 
   # Redis Cache Service (for development)
   redis:

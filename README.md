@@ -17,11 +17,18 @@ This project demonstrates:
 ## ⚙️ Architecture
 
 ```
-Frontend Web (Dashboard) → Frontend API → Microservices
-                                        ├── IoT Ingestion
-                                        ├── AI Processor  
-                                        └── Alert Service
+Client Browser → Nginx (Reverse Proxy) → Frontend Web (Dashboard) → Frontend API → Microservices
+                                                                                  ├── IoT Ingestion
+                                                                                  ├── AI Processor  
+                                                                                  └── Alert Service
 ```
+
+### Nginx Role
+Nginx serves as a **reverse proxy** and **load balancer** that:
+- Routes incoming requests to appropriate microservices based on URL paths
+- Provides a single entry point (port 80) for all services
+- Handles SSL termination and static file serving
+- Implements API gateway patterns for microservice communication
 
 ---
 
@@ -29,11 +36,13 @@ Frontend Web (Dashboard) → Frontend API → Microservices
 
 | Service | Description | Port |
 |---------|-------------|------|
+| `nginx` | Reverse proxy and API gateway | 80 |
 | `frontend_web` | Dashboard UI with Chart.js & Tailwind CSS | 8000 |
 | `frontend_api` | REST API serving dashboard data | 8001 |
 | `iot_ingestion` | Receives mock IoT data | 8002 |
 | `ai_processor` | Data processing and analytics | 8003 |
 | `alert_service` | Notification system | 8004 |
+| `redis` | Cache and session storage | 6379 |
 
 ---
 
@@ -56,12 +65,17 @@ git clone https://github.com/Abey627/boiler-monitoring-platform.git
 cd boiler-monitoring-platform
 
 # Build and run all services
-docker-compose up --build
+docker compose up --build
 ```
 
 **Access Points:**
-- Dashboard: http://localhost/
-- Health checks: http://localhost/api/{service}/health/
+- Dashboard: http://localhost/ (via nginx proxy)
+- Direct Service Access: http://localhost:8000-8004
+- API Endpoints:
+  - Frontend API: http://localhost/api/frontend/
+  - IoT Ingestion: http://localhost/api/iot/
+  - AI Processor: http://localhost/api/ai/
+  - Alert Service: http://localhost/api/alert/
 
 ## 📂 Project Structure
 

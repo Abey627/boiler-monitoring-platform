@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+
+# Logs
+*.log
+logs/
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Static files
+staticfiles/
+media/
+
+# Node modules (if any)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
