@@ -75,12 +75,29 @@ WSGI_APPLICATION = 'ai_processor.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Use PostgreSQL for production-like setup
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'steambytes_core'),
+        'USER': os.environ.get('POSTGRES_USER', 'steambytes'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'steambytes_dev_password'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 20,
+        }
     }
 }
+
+# Fallback to SQLite for local development without Docker
+if os.environ.get('USE_SQLITE', '').lower() == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -119,6 +136,29 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# InfluxDB Configuration for Analytics
+INFLUXDB_CONFIG = {
+    'url': os.environ.get('INFLUX_URL', 'http://influxdb:8086'),
+    'token': os.environ.get('INFLUX_TOKEN', 'steambytes_admin_token'),
+    'org': os.environ.get('INFLUX_ORG', 'steambytes'),
+    'bucket': os.environ.get('INFLUX_BUCKET', 'sensor_data'),
+}
+
+# Redis Configuration for Caching Analytics Results
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'ai_processor',
+        'TIMEOUT': 1800,  # 30 minutes for analytics results
+    }
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

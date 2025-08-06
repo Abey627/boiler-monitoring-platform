@@ -137,6 +137,29 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# InfluxDB Configuration
+INFLUXDB_CONFIG = {
+    'url': os.environ.get('INFLUX_URL', 'http://influxdb:8086'),
+    'token': os.environ.get('INFLUX_TOKEN', 'steambytes_admin_token'),
+    'org': os.environ.get('INFLUX_ORG', 'steambytes'),
+    'bucket': os.environ.get('INFLUX_BUCKET', 'sensor_data'),
+}
+
+# Redis Configuration for Real-time Data Caching
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'iot_ingestion',
+        'TIMEOUT': 300,  # 5 minutes default timeout
+    }
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

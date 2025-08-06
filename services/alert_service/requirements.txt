@@ -6,3 +6,4 @@ tzdata==2025.2
 psycopg2-binary==2.9.9
 redis==5.0.8
 influxdb-client==1.45.0
+django-redis==5.4.0
