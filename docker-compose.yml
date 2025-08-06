@@ -28,14 +28,23 @@
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=frontend_web.settings
+      - DJANGO_SERVICE_NAME=frontend_web
+      - PORT=8000
     volumes:
       - ./frontend_web:/app
       - /app/__pycache__
+      - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - boiler_network
     restart: no
+    command: ["bash", "/app/init.sh"]
 
   # Frontend API Service
   frontend_api:
@@ -48,14 +57,23 @@
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=frontend_api.settings
+      - DJANGO_SERVICE_NAME=frontend_api
+      - PORT=8001
     volumes:
       - ./services/frontend_api:/app
       - /app/__pycache__
+      - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - boiler_network
     restart: no
+    command: ["bash", "/app/init.sh"]
 
   # IoT Ingestion Service
   iot_ingestion:
@@ -68,14 +86,23 @@
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=iot_ingestion.settings
+      - DJANGO_SERVICE_NAME=iot_ingestion
+      - PORT=8002
     volumes:
       - ./services/iot_ingestion:/app
       - /app/__pycache__
+      - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - boiler_network
     restart: no
+    command: ["bash", "/app/init.sh"]
 
   # AI Processor Service
   ai_processor:
@@ -88,14 +115,23 @@
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=ai_processor.settings
+      - DJANGO_SERVICE_NAME=ai_processor
+      - PORT=8003
     volumes:
       - ./services/ai_processor:/app
       - /app/__pycache__
+      - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - boiler_network
     restart: no
+    command: ["bash", "/app/init.sh"]
 
   # Alert Service
   alert_service:
@@ -108,14 +144,23 @@
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=alert_service.settings
+      - DJANGO_SERVICE_NAME=alert_service
+      - PORT=8004
     volumes:
       - ./services/alert_service:/app
       - /app/__pycache__
+      - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - boiler_network
     restart: no
+    command: ["bash", "/app/init.sh"]
 
   # Primary Database (PostgreSQL)
   postgres:
@@ -132,6 +177,11 @@
     networks:
       - boiler_network
     restart: no
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U steambytes -d steambytes_core"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Time-Series Database (InfluxDB)
   influxdb:
@@ -164,6 +214,11 @@
     networks:
       - boiler_network
     restart: no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 # Networks
 networks:

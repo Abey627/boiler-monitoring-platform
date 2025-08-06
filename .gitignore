@@ -21,6 +21,23 @@ staticfiles/
 static/
 migrations/*.py
 !migrations/__init__.py
+# Empty init.sh files (real one is in scripts/init/)
+*/init.sh
+!scripts/init/
+# Empty .dockerignore files (main one is at root, template in scripts/)
+services/*/.dockerignore
+frontend_web/.dockerignore
+
+# Redundant setup scripts (keep only PowerShell version)
+scripts/setup.bat
+scripts/setup.sh
+scripts/init/health-check.bat
+scripts/init/health-check.sh
+
+# Unused shared utility directories
+services/shared/
+**/shared/*.py
+!**/shared/__init__.py
 
 # Environment variables
 .env.local
@@ -96,6 +113,8 @@ cover/
 *_new.*
 *.bak
 *.orig
+backups/
+*migrations-batch-*/
 
 # Translations
 *.mo

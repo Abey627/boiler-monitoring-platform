@@ -21,7 +21,26 @@ cd boiler-monitoring-platform
 docker compose up --build
 
 # Access dashboard: http://localhost:8000
-# Login: admin / steambytes123
+# Login: admin / admin123
+```
+
+### 🛠️ Development Commands
+
+```powershell
+# Reset all Django migrations (Windows PowerShell)
+# Navigate to project root directory first
+cd "c:\Personal-Dev\boiler-monitoring-platform"
+
+# Run the migration reset script (recommended method)
+powershell -ExecutionPolicy Bypass -File ".\reset-migrations-oneliner.ps1"
+
+# OR if execution policy allows
+.\reset-migrations-oneliner.ps1
+
+# Health check
+.\scripts\quick-health-check.ps1
+
+# For more scripts, see scripts/README.md
 ```
 
 ## 🏗️ Microservice Architecture
