@@ -15,19 +15,30 @@ echo "========================================="
 echo "Waiting for database connection..."
 python manage.py check --database default
 
+# Generate migration files if they don't exist (for development)
+if [ "$DEBUG" = "1" ]; then
+    echo "Checking for model changes and generating migrations..."
+    python manage.py makemigrations --noinput || echo "No new migrations needed"
+fi
+
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate --noinput
 
-# Create superuser if it doesn't exist (for development)
+# Create superuser and demo users if they don't exist (for development)
 if [ "$DEBUG" = "1" ]; then
-    echo "Creating development superuser if it doesn't exist..."
+    echo "Setting up development users..."
     
-    # Check if we have a custom create_admin command
-    if python manage.py help create_admin >/dev/null 2>&1; then
+    # Check if demo users should be created
+    if [ "$CREATE_DEMO_USERS" = "true" ] && python manage.py help setup_demo_users >/dev/null 2>&1; then
+        echo "Creating comprehensive demo user structure..."
+        python manage.py setup_demo_users --quiet
+    elif python manage.py help create_admin >/dev/null 2>&1; then
+        echo "Creating basic admin user..."
         python manage.py create_admin
     else
         # Fallback to standard superuser creation
+        echo "Creating fallback superuser..."
         python manage.py shell << EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()

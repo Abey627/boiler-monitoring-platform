@@ -1,8 +1,12 @@
-asgiref==3.9.1
+# Core Django
 Django==5.2.4
-django-tailwind==4.2.0
-sqlparse==0.5.3
-tzdata==2025.2
+
+# Database drivers
 psycopg2-binary==2.9.9
+
+# Cache and session storage
 redis==5.0.8
 django-redis==5.4.0
+
+# Additional utilities
+tzdata==2025.2

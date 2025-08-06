@@ -1,0 +1,208 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Manage Users - User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-users"></i> Manage Users</h1>
+    <a href="{% url 'dashboard:user_create' %}" class="btn btn-success">
+        <i class="fas fa-user-plus"></i> Add New User
+    </a>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Users</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Name, username, or email">
+            </div>
+            <div class="col-md-3">
+                <label for="role" class="form-label">Filter by Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">All Roles</option>
+                    {% for role_code, role_name in role_choices %}
+                        <option value="{{ role_code }}" {% if role_filter == role_code %}selected{% endif %}>
+                            {{ role_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <a href="{% url 'dashboard:user_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Users in {{ user.organization.name }}</h5>
+        <span class="badge bg-info">{{ users.paginator.count }} total</span>
+    </div>
+    <div class="card-body p-0">
+        {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_item in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-3">
+                                            {{ user_item.first_name|first|default:user_item.username|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">
+                                                {{ user_item.get_full_name|default:user_item.username }}
+                                            </div>
+                                            <small class="text-muted">@{{ user_item.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ user_item.get_role_display }}</span>
+                                </td>
+                                <td>{{ user_item.email|default:"No email" }}</td>
+                                <td>
+                                    {% if user_item.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user_item.last_login %}
+                                        <small>{{ user_item.last_login|timesince }} ago</small>
+                                    {% else %}
+                                        <small class="text-muted">Never</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'dashboard:user_edit' user_item.id %}" 
+                                           class="btn btn-outline-primary" title="Edit User">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if user_item != user %}
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    onclick="toggleUserStatus({{ user_item.id }})" title="Toggle Status">
+                                                {% if user_item.is_active %}
+                                                    <i class="fas fa-user-times"></i>
+                                                {% else %}
+                                                    <i class="fas fa-user-check"></i>
+                                                {% endif %}
+                                            </button>
+                                            <a href="{% url 'dashboard:user_delete' user_item.id %}" 
+                                               class="btn btn-outline-danger" title="Delete User">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Users Found</h5>
+                <p class="text-muted">Try adjusting your search criteria or add new users.</p>
+                <a href="{% url 'dashboard:user_create' %}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Add First User
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if users.has_other_pages %}
+    <nav aria-label="User pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if users.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ users.number }} of {{ users.paginator.num_pages }}
+                </span>
+            </li>
+            
+            {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleUserStatus(userId) {
+    if (confirm('Are you sure you want to change this user\'s status?')) {
+        fetch('{% url "dashboard:api_toggle_user_status" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                'user_id': userId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating user status.');
+        });
+    }
+}
+</script>
+{% endblock %}

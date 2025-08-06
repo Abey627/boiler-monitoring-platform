@@ -3,114 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Industrial Boiler Monitoring Platform{% endblock %}</title>
+    <title>{% block title %}Boiler Monitoring - User Management{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+        
         .navbar-brand {
             font-weight: bold;
-            color: #0d6efd !important;
+            color: var(--primary-color) !important;
         }
+        
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .nav-link {
+            color: var(--primary-color);
+            border-radius: 0.375rem;
+            margin: 0.25rem 0;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white !important;
+        }
+        
         .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: none;
-            margin-bottom: 1rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: box-shadow 0.15s ease-in-out;
         }
-        .status-operational {
-            color: #198754;
+        
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
-        .status-warning {
-            color: #fd7e14;
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
         }
-        .status-critical {
-            color: #dc3545;
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
         }
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, var(--secondary-color), #3cb4e5);
             color: white;
         }
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
         
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1rem;
+            .main-content {
+                padding: 1rem;
             }
-            .chart-container {
-                height: 250px;
-            }
-            .metric-card .card-body {
-                padding: 1rem 0.5rem;
-            }
-            .metric-card h5 {
-                font-size: 1.2rem;
-            }
-            .metric-card small {
-                font-size: 0.75rem;
-            }
-            .table-responsive {
-                font-size: 0.875rem;
-            }
-            .alert-sm {
-                padding: 0.5rem;
-                font-size: 0.875rem;
-            }
-            .container-fluid {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
-        }
-        
-        /* Extra small devices */
-        @media (max-width: 576px) {
-            .navbar-brand {
-                font-size: 0.9rem;
-            }
-            .chart-container {
-                height: 200px;
-            }
-            .metric-card h5 {
-                font-size: 1rem;
-            }
-            .metric-card i {
-                font-size: 1.2rem !important;
-            }
-            .card-title {
-                font-size: 1rem;
-            }
-            .btn {
-                font-size: 0.875rem;
-            }
-        }
-        
-        /* Large screens */
-        @media (min-width: 1200px) {
-            .chart-container {
-                height: 350px;
-            }
-        }
-        
-        /* Utility classes for responsive spacing */
-        .mb-mobile-3 {
-            margin-bottom: 1rem;
-        }
-        @media (min-width: 768px) {
-            .mb-mobile-3 {
-                margin-bottom: 0;
+            .sidebar {
+                min-height: auto;
             }
         }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
-    {% block content %}
-    {% endblock %}
-    
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
+                <i class="fas fa-fire"></i> Boiler Monitor
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <div class="user-avatar me-2">
+                                    {{ user.first_name|first|default:user.username|first|upper }}
+                                </div>
+                                {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'dashboard:profile' %}"><i class="fas fa-user"></i> Profile</a></li>
+                                {% if user.can_manage_users %}
+                                    <li><a class="dropdown-item" href="{% url 'dashboard:organization' %}"><i class="fas fa-building"></i> Organization</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'dashboard:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% if user.is_authenticated %}
+                <!-- Sidebar -->
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                    <div class="position-sticky pt-3">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                                   href="{% url 'dashboard:dashboard' %}">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                            </li>
+                            
+                            {% if user.can_manage_users %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}" 
+                                       href="{% url 'dashboard:user_list' %}">
+                                        <i class="fas fa-users"></i> Users
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'user_create' %}active{% endif %}" 
+                                       href="{% url 'dashboard:user_create' %}">
+                                        <i class="fas fa-user-plus"></i> Add User
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" 
+                                   href="{% url 'dashboard:profile' %}">
+                                    <i class="fas fa-user-cog"></i> My Profile
+                                </a>
+                            </li>
+                            
+                            <hr>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'dashboard:health_check' %}">
+                                    <i class="fas fa-heartbeat"></i> System Health
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Main Content -->
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            {% else %}
+                <main class="col-12">
+            {% endif %}
+                
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="mt-3">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Page Content -->
+                <div class="main-content">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    {% block scripts %}
-    {% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

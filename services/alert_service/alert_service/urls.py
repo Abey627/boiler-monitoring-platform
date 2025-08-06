@@ -1,8 +1,9 @@
-from django.contrib import admin
 from django.urls import path
 from notifier.views import health_check
 
+# Minimal URL configuration - Health check only
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('health/', health_check),
+    path('health/', health_check, name='health_check'),
+    path('api/health/', health_check, name='api_health_check'),
+    path('', health_check, name='root'),  # Default route
 ]

@@ -1,0 +1,163 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Profile - User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-cog"></i> My Profile</h1>
+    <a href="{% url 'dashboard:dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-edit"></i> Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ user.last_name }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ user.phone|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="department" name="department" 
+                               value="{{ user.department|default:'' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ profile.bio|default:'' }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-id-card"></i> Account Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Username:</strong><br>
+                    <span class="text-muted">{{ user.username }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Role:</strong><br>
+                    <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Organization:</strong><br>
+                    <span class="text-muted">{{ user.organization.name }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Member Since:</strong><br>
+                    <span class="text-muted">{{ user.date_joined|date:"M d, Y" }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Last Login:</strong><br>
+                    <span class="text-muted">
+                        {% if user.last_login %}
+                            {{ user.last_login|timesince }} ago
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences Card -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-cog"></i> Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="timezone" class="form-label">Timezone</label>
+                        <select class="form-select" id="timezone" name="timezone">
+                            <option value="UTC" {% if profile.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                            <option value="America/New_York" {% if profile.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time</option>
+                            <option value="America/Chicago" {% if profile.timezone == 'America/Chicago' %}selected{% endif %}>Central Time</option>
+                            <option value="America/Denver" {% if profile.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time</option>
+                            <option value="America/Los_Angeles" {% if profile.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="language" class="form-label">Language</label>
+                        <select class="form-select" id="language" name="language">
+                            <option value="en" {% if profile.language == 'en' %}selected{% endif %}>English</option>
+                            <option value="es" {% if profile.language == 'es' %}selected{% endif %}>Spanish</option>
+                            <option value="fr" {% if profile.language == 'fr' %}selected{% endif %}>French</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="email_notifications" 
+                                   name="email_notifications" {% if profile.email_notifications %}checked{% endif %}>
+                            <label class="form-check-label" for="email_notifications">
+                                Email Notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

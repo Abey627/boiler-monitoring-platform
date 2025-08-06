@@ -1,5 +1,5 @@
 ﻿services:
-  # Nginx Reverse Proxy
+  # Nginx Reverse Proxy - Only routes to frontend_web for development
   nginx:
     image: nginx:alpine
     container_name: boiler_nginx
@@ -9,15 +9,11 @@
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - frontend_web
-      - frontend_api
-      - iot_ingestion
-      - ai_processor
-      - alert_service
     networks:
       - boiler_network
     restart: no
 
-  # Frontend Web Service (Dashboard UI)
+  # Frontend Web Service (Dashboard UI) - MAIN DEVELOPMENT FOCUS
   frontend_web:
     build:
       context: ./frontend_web
@@ -30,6 +26,8 @@
       - DJANGO_SETTINGS_MODULE=frontend_web.settings
       - DJANGO_SERVICE_NAME=frontend_web
       - PORT=8000
+      # Enable demo user creation during startup (comment out to disable)
+      - CREATE_DEMO_USERS=true
     volumes:
       - ./frontend_web:/app
       - /app/__pycache__
@@ -46,117 +44,89 @@
     restart: no
     command: ["bash", "/app/init.sh"]
 
-  # Frontend API Service
+  # Frontend API Service - MINIMAL (Health Check Only)
   frontend_api:
     build:
       context: ./services/frontend_api
       dockerfile: Dockerfile
     container_name: boiler_frontend_api
-    env_file:
-      - .env
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - DJANGO_SETTINGS_MODULE=frontend_api.settings
       - DJANGO_SERVICE_NAME=frontend_api
       - PORT=8001
+      - USE_SQLITE=true
     volumes:
       - ./services/frontend_api:/app
-      - /app/__pycache__
       - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8001:8001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     networks:
       - boiler_network
     restart: no
     command: ["bash", "/app/init.sh"]
 
-  # IoT Ingestion Service
+  # IoT Ingestion Service - MINIMAL (Health Check Only)
   iot_ingestion:
     build:
       context: ./services/iot_ingestion
       dockerfile: Dockerfile
     container_name: boiler_iot_ingestion
-    env_file:
-      - .env
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - DJANGO_SETTINGS_MODULE=iot_ingestion.settings
       - DJANGO_SERVICE_NAME=iot_ingestion
       - PORT=8002
+      - USE_SQLITE=true
     volumes:
       - ./services/iot_ingestion:/app
-      - /app/__pycache__
       - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8002:8002"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     networks:
       - boiler_network
     restart: no
     command: ["bash", "/app/init.sh"]
 
-  # AI Processor Service
+  # AI Processor Service - MINIMAL (Health Check Only)
   ai_processor:
     build:
       context: ./services/ai_processor
       dockerfile: Dockerfile
     container_name: boiler_ai_processor
-    env_file:
-      - .env
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - DJANGO_SETTINGS_MODULE=ai_processor.settings
       - DJANGO_SERVICE_NAME=ai_processor
       - PORT=8003
+      - USE_SQLITE=true
     volumes:
       - ./services/ai_processor:/app
-      - /app/__pycache__
       - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8003:8003"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     networks:
       - boiler_network
     restart: no
     command: ["bash", "/app/init.sh"]
 
-  # Alert Service
+  # Alert Service - MINIMAL (Health Check Only)
   alert_service:
     build:
       context: ./services/alert_service
       dockerfile: Dockerfile
     container_name: boiler_alert_service
-    env_file:
-      - .env
     environment:
-      - DEBUG=1
+      - DEBUG=0
       - DJANGO_SETTINGS_MODULE=alert_service.settings
       - DJANGO_SERVICE_NAME=alert_service
       - PORT=8004
+      - USE_SQLITE=true
     volumes:
       - ./services/alert_service:/app
-      - /app/__pycache__
       - ./scripts/init/django-init.sh:/app/init.sh:ro
     ports:
       - "8004:8004"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     networks:
       - boiler_network
     restart: no

@@ -6,6 +6,8 @@ This directory contains initialization and setup scripts for the Boiler Monitori
 
 ### Setup Scripts (Platform Initialization)
 - **`setup.ps1`** - PowerShell setup script (recommended for Windows)
+- **`setup_demo_users.ps1`** - Create comprehensive demo users for development
+- **`setup_demo_users.sh`** - Create comprehensive demo users (Linux/Mac)
 
 ### Initialization Scripts
 - **`init/django-init.sh`** - Django service initialization script
@@ -29,6 +31,19 @@ This directory contains initialization and setup scripts for the Boiler Monitori
 ```powershell
 # After platform is running
 python .\scripts\generate_sample_data.py
+```
+
+### Demo User Setup
+```powershell
+# Windows - Create comprehensive demo users
+.\scripts\setup_demo_users.ps1
+
+# Linux/Mac - Create comprehensive demo users  
+./scripts/setup_demo_users.sh
+
+# Or manually via Django command
+cd frontend_web
+python manage.py setup_demo_users
 ```
 
 ### Network IP Detection (for demos)
